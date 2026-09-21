@@ -10,13 +10,15 @@
     "build": "astro build",
     "check": "astro check",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.1",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.2",
+    "jiti": "^2.7.0",
     "sharp": "^0.35.0"
   },
   "allowScripts": {
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "eslint-plugin-astro": "^3.2.1",
     "typescript": "^6.0.3"
   }
 }
