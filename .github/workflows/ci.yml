@@ -19,9 +19,10 @@ jobs:
 
       - name: Install Project Dependencies
         run: npm ci 
-      - name: Run Static Analysis & Tests
-        run: |
-          npm run lint
-          npm run check
-          npm run test:unit
+      - name: Run Linter
+        run: npm run lint
+      - name: Run Type Check
+        run: npm run check
+      - name: Run Unit Tests
+        run: npm run test:unit
 
