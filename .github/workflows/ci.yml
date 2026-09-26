@@ -6,23 +6,23 @@ on:
 
 jobs:
   validate:
-    run-on: ubuntu-latest
-    setps:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js Runtime
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: 'npm' 
 
       - name: Install Project Dependencies
-        run: npm ci
-
-      - name: Run Static Analysis and Tests
-        run: |
-          npm run lint
-          npm run check
-          npm run test:unit
+        run: npm ci 
+      - name: Run Linter
+        run: npm run lint
+      - name: Run Type Check
+        run: npm run check
+      - name: Run Unit Tests
+        run: npm run test:unit
 
