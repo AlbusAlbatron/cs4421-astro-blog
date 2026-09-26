@@ -6,8 +6,8 @@ on:
 
 jobs:
   validate:
-    run-on: ubuntu-latest
-    setps:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
@@ -15,12 +15,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'npm' 
 
       - name: Install Project Dependencies
-        run: npm ci
-
-      - name: Run Static Analysis and Tests
+        run: npm ci 
+      - name: Run Static Analysis & Tests
         run: |
           npm run lint
           npm run check
