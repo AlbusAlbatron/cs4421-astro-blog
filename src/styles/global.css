@@ -139,3 +139,57 @@ hr {
 	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
 }
+
+
+/* =========================================
+   DARK MODE OVERRIDES
+   ========================================= */
+
+html.dark {
+  /* 1. Override the default Astro Blog variables */
+  --black: #e0e0e0;            /* Flips dark text to light */
+  --gray-light: #222222;       /* Flips light gray to dark */
+  --gray-dark: #e5e6e6;        /* Flips dark gray to light */
+  --gray-gradient: rgba(18, 18, 18, 1), rgba(18, 18, 18, 0); /* Fixes the white gradient! */
+  --box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  /* 2. Set the base background */
+  background-color: #121212;
+  color: var(--black);
+}
+
+html.dark body {
+  background-color: #121212;
+  color: var(--black);
+}
+
+/* 3. Fix hardcoded white backgrounds in the template */
+html.dark header {
+  background-color: #1a1a1a; /* Fixes the white header */
+  box-shadow: var(--box-shadow);
+}
+
+html.dark header h2 a, 
+html.dark header h2 a:hover {
+  color: #ffffff;
+}
+
+/* 4. Fix Links & Buttons */
+html.dark a {
+  color: #4a90e2; 
+}
+
+html.dark a:hover {
+  color: #6fb3ff;
+}
+
+/* Fix any default formatted code/pre blocks that might clash */
+html.dark pre {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333;
+}
+
+html.dark code {
+  color: #ff7e7e;
+  background-color: #2a2a2a;
+}
