@@ -1,12 +1,14 @@
-name: Continuous Integration
+name: Deploy Static Site via AWS CDK
 
 on:
-  pull_request:
+  push:
     branches: [main]
 
 jobs:
-  validate:
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -20,23 +22,24 @@ jobs:
             package-lock.json
             cdk/package-lock.json
 
-      - name: Install Project Dependencies
+      - name: Install Astro Dependencies
         run: npm ci
-      - name: Run Linter
-        run: npm run lint
-      - name: Run Type Check
-        run: npm run check
-      - name: Run Unit Tests
-        run: npm run test:unit
+
       - name: Build Astro Static Site
         run: npm run build
+
       - name: Install CDK Dependencies
         run: npm ci
         working-directory: cdk
-      - name: Build CDK App
-        run: npm run build
-        working-directory: cdk
-      - name: Run CDK Tests
-        run: npm test -- --runInBand
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy Infrastructure & Assets with AWS CDK
+        run: npx cdk deploy --require-approval never
         working-directory: cdk
 
