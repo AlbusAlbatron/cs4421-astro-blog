@@ -39,4 +39,5 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone',
   }),
+  integrations: [mdx(), sitemap()],
 });
