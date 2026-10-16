@@ -126,3 +126,5 @@ export function createGitHubClient(options: GitHubClientOptions = {}) {
 		},
 	};
 }
+
+export type GitHubClient = ReturnType<typeof createGitHubClient>;
