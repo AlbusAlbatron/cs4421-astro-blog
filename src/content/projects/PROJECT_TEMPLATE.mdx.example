@@ -1,0 +1,25 @@
+---
+title: 'Project name'
+description: 'A short sentence explaining what the project does.'
+repoUrl: 'https://github.com/your-name/your-project'
+# Remove demoUrl when the project has no live demo.
+demoUrl: 'https://example.com'
+date: 2026-01-01
+stack:
+  - 'Astro'
+  - 'TypeScript'
+# Optional local image path, relative to this file.
+# heroImage: '../../assets/your-project-cover.jpg'
+# heroImageAlt: 'Describe what the project cover image shows.'
+# Optional externally hosted screenshots. Each image needs useful alt text.
+gallery: []
+---
+
+## Overview
+
+Explain the problem the project solves and who it is for.
+
+## Highlights
+
+- Describe one useful feature or technical decision.
+- Add or remove bullets to suit the project.

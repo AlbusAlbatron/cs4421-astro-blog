@@ -1,0 +1,16 @@
+---
+import { getEntry, render } from 'astro:content';
+import Project from '../../layouts/Project.astro';
+
+const project = await getEntry('projects', Astro.params.slug ?? '');
+
+if (!project) {
+	return new Response('Project not found', { status: 404 });
+}
+
+const { Content } = await render(project);
+---
+
+<Project {...project.data}>
+	<Content />
+</Project>

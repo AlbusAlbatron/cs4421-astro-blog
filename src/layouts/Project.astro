@@ -1,0 +1,120 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+
+type Props = CollectionEntry<'projects'>['data'];
+
+const { title, description, repoUrl, demoUrl, stack, heroImage, heroImageAlt, gallery, date } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			main {
+				width: calc(100% - 2em);
+				max-width: 100%;
+				margin: 0;
+			}
+			.hero-image {
+				width: 100%;
+			}
+			.hero-image img {
+				display: block;
+				width: min(1020px, 100%);
+				aspect-ratio: 2 / 1;
+				object-fit: cover;
+				margin: 0 auto;
+				border-radius: 8px;
+				box-shadow: var(--box-shadow);
+			}
+			.prose {
+				width: 720px;
+				max-width: calc(100% - 2em);
+				margin: auto;
+				padding: 1em;
+				color: rgb(var(--gray-dark));
+			}
+			.title {
+				margin-bottom: 1em;
+				padding: 1em 0;
+				text-align: center;
+				line-height: 1;
+			}
+			.title h1 {
+				margin: 0 0 0.5em;
+			}
+			.date {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
+			.project-links,
+			.stack,
+			.gallery {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.75rem 1.25rem;
+				margin: 0 0 1.5rem;
+				padding: 0;
+				list-style: none;
+			}
+			.project-links a {
+				font-weight: 700;
+			}
+			.stack {
+				color: rgb(var(--gray-dark));
+			}
+			.gallery {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+				margin-top: 2rem;
+			}
+			.gallery img {
+				display: block;
+				width: 100%;
+				aspect-ratio: 4 / 3;
+				object-fit: cover;
+				border-radius: 8px;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<article>
+				{heroImage && (
+					<div class="hero-image">
+						<Image width={1020} height={510} src={heroImage} alt={heroImageAlt ?? title} />
+					</div>
+				)}
+				<div class="prose">
+					<div class="title">
+						<div class="date"><FormattedDate date={date} /></div>
+						<h1>{title}</h1>
+						<hr />
+					</div>
+					<ul class="project-links" aria-label="Project links">
+						<li><a href={repoUrl} target="_blank" rel="noreferrer">View source code</a></li>
+						{demoUrl && <li><a href={demoUrl} target="_blank" rel="noreferrer">View live demo</a></li>}
+					</ul>
+					{stack.length > 0 && (
+						<ul class="stack" aria-label="Technologies used">
+							{stack.map((technology) => <li>{technology}</li>)}
+						</ul>
+					)}
+					<slot />
+					{gallery.length > 0 && (
+						<ul class="gallery" aria-label="Project screenshots">
+							{gallery.map((item) => <li><img src={item.url} alt={item.alt} loading="lazy" /></li>)}
+						</ul>
+					)}
+				</div>
+			</article>
+		</main>
+		<Footer />
+	</body>
+</html>

@@ -36,4 +36,27 @@ const blog = defineCollection({
 		}),
 });
 
-export const collections = { authors, blog };
+const projects = defineCollection({
+	loader: glob({ base: './src/content/projects', pattern: '**/*.{md,mdx}' }),
+	schema: ({ image }) =>
+		z.object({
+			title: z.string().min(1),
+			description: z.string().min(1),
+			repoUrl: z.url({ protocol: /^https?$/ }),
+			demoUrl: z.url({ protocol: /^https?$/ }).optional(),
+			stack: z.array(z.string().trim().min(1)).default([]),
+			heroImage: image().optional(),
+			heroImageAlt: z.string().min(1).optional(),
+			gallery: z
+				.array(
+					z.object({
+						url: z.url({ protocol: /^https?$/ }),
+						alt: z.string().min(1),
+					}),
+				)
+				.default([]),
+			date: z.coerce.date(),
+		}),
+});
+
+export const collections = { authors, blog, projects };
