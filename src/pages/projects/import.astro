@@ -1,0 +1,230 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Import GitHub projects | ${SITE_TITLE}`}
+			description="Preview GitHub repositories before adding them to your project portfolio."
+		/>
+		<style>
+			main {
+				width: min(960px, calc(100% - 2em));
+			}
+			.import-header {
+				margin-bottom: 2rem;
+			}
+			.import-header h1 {
+				margin-bottom: 0.5rem;
+			}
+			.import-form {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: end;
+				gap: 0.75rem;
+				margin-bottom: 2rem;
+			}
+			.field {
+				flex: 1 1 18rem;
+			}
+			.field label {
+				display: block;
+				margin-bottom: 0.25rem;
+				font-weight: 700;
+			}
+			.field input {
+				box-sizing: border-box;
+				width: 100%;
+				padding: 0.6rem 0.75rem;
+				border: 1px solid rgb(var(--gray));
+				border-radius: 4px;
+				background: white;
+				color: rgb(var(--black));
+			}
+			button {
+				padding: 0.65rem 1rem;
+				border: 0;
+				border-radius: 4px;
+				background: var(--accent);
+				color: white;
+				font: inherit;
+				font-weight: 700;
+				cursor: pointer;
+			}
+			button:disabled {
+				cursor: wait;
+				opacity: 0.65;
+			}
+			.status {
+				min-height: 1.7em;
+				margin-bottom: 1.5rem;
+			}
+			.status[data-state='error'] {
+				color: #a11;
+			}
+			.status[data-state='empty'] {
+				color: rgb(var(--gray-dark));
+			}
+			.project-list {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+				gap: 1rem;
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			.project-card {
+				padding: 1rem;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 8px;
+				background: rgb(255 255 255 / 70%);
+		}
+			.project-card:has(input:checked) {
+				border-color: var(--accent);
+				box-shadow: 0 0 0 2px rgb(35 55 255 / 15%);
+			}
+			.project-card label {
+				display: block;
+				cursor: pointer;
+			}
+			.project-card h2 {
+				margin: 0.5rem 0;
+				font-size: 1.35rem;
+			}
+			.project-card p {
+				margin: 0 0 0.75rem;
+			}
+			.project-meta {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem 1rem;
+				margin: 0;
+				padding: 0;
+				color: rgb(var(--gray-dark));
+				font-size: 0.9rem;
+				list-style: none;
+			}
+			.project-meta a {
+				word-break: break-word;
+			}
+			html.dark .field input,
+			html.dark .project-card {
+			background: #1a1a1a;
+		}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="import-header">
+				<h1>Import GitHub projects</h1>
+				<p>Choose repositories to prepare for your project portfolio.</p>
+			</section>
+
+			<form class="import-form" id="import-form">
+				<div class="field">
+					<label for="github-username">GitHub username</label>
+					<input id="github-username" name="username" autocomplete="username" required />
+				</div>
+				<button type="submit">Find repositories</button>
+			</form>
+
+			<p class="status" id="import-status" aria-live="polite"></p>
+			<ul class="project-list" id="project-list" aria-label="GitHub repositories"></ul>
+		</main>
+		<Footer />
+
+		<script>
+			type ImportedProject = {
+				title: string;
+				description: string;
+				repoUrl: string;
+				stack: string[];
+				date: string;
+			};
+
+			const form = document.querySelector<HTMLFormElement>('#import-form');
+			const usernameInput = document.querySelector<HTMLInputElement>('#github-username');
+			const status = document.querySelector<HTMLParagraphElement>('#import-status');
+			const projectList = document.querySelector<HTMLUListElement>('#project-list');
+			const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+			function setStatus(message: string, state = '') {
+				if (!status) return;
+				status.textContent = message;
+				status.dataset.state = state;
+			}
+
+			function renderProjects(projects: ImportedProject[]) {
+				if (!projectList) return;
+				projectList.replaceChildren();
+
+				for (const project of projects) {
+					const item = document.createElement('li');
+					item.className = 'project-card';
+					const label = document.createElement('label');
+					const checkbox = document.createElement('input');
+					checkbox.type = 'checkbox';
+					checkbox.name = 'projects';
+					checkbox.value = project.repoUrl;
+					const title = document.createElement('h2');
+					title.textContent = project.title;
+					const description = document.createElement('p');
+					description.textContent = project.description;
+					const metadata = document.createElement('ul');
+					metadata.className = 'project-meta';
+					const stack = document.createElement('li');
+					stack.textContent = project.stack.join(', ');
+					const repository = document.createElement('li');
+					const repositoryLink = document.createElement('a');
+					repositoryLink.href = project.repoUrl;
+					repositoryLink.target = '_blank';
+					repositoryLink.rel = 'noreferrer';
+					repositoryLink.textContent = 'View repository';
+					repository.append(repositoryLink);
+					metadata.append(stack, repository);
+					label.append(checkbox, title, description, metadata);
+					item.append(label);
+					projectList.append(item);
+				}
+			}
+
+			form?.addEventListener('submit', async (event) => {
+				event.preventDefault();
+				const username = usernameInput?.value.trim();
+
+				if (!username || !status || !projectList) return;
+
+				projectList.replaceChildren();
+				setStatus('Loading repositories...');
+				if (submitButton) submitButton.disabled = true;
+
+				try {
+					const response = await fetch(`/api/github/users/${encodeURIComponent(username)}/projects`);
+					const payload = (await response.json()) as { projects?: ImportedProject[]; error?: string };
+
+					if (!response.ok) {
+						throw new Error(payload.error ?? 'Unable to load repositories.');
+					}
+
+					if (!payload.projects?.length) {
+						setStatus('No public repositories were found.', 'empty');
+						return;
+					}
+
+					renderProjects(payload.projects);
+					setStatus(`${payload.projects.length} repositories found.`);
+				} catch (error) {
+					setStatus(error instanceof Error ? error.message : 'Unable to load repositories.', 'error');
+				} finally {
+					if (submitButton) submitButton.disabled = false;
+				}
+			});
+		</script>
+	</body>
+</html>
