@@ -16,6 +16,16 @@ export default tseslint.config(
     },
   },
 
+  {
+    files: ['src/lib/db/migrate.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
+
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
 
