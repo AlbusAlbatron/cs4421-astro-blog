@@ -15,7 +15,8 @@
     "test:unit": "vitest",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "db:logs": "docker compose logs postgres"
+    "db:logs": "docker compose logs postgres",
+    "db:migrate": "node src/lib/db/migrate.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.1",
