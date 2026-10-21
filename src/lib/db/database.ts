@@ -10,11 +10,13 @@ export class DatabaseConfigurationError extends Error {
 }
 
 export function getDatabasePool(): Pool {
-	if (!process.env.DATABASE_URL) {
+	const databaseUrl = import.meta.env.DATABASE_URL ?? process.env.DATABASE_URL;
+
+	if (!databaseUrl) {
 		throw new DatabaseConfigurationError();
 	}
 
-	pool ??= new Pool({ connectionString: process.env.DATABASE_URL });
+	pool ??= new Pool({ connectionString: databaseUrl });
 
 	return pool;
 }
