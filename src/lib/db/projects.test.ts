@@ -30,7 +30,12 @@ const row = {
 	updated_at: new Date('2026-10-16T12:00:00Z'),
 };
 
-function databaseReturning(...rows: typeof row[]) {
+function databaseReturning(...rows: (typeof row & {
+	override_title?: string | null;
+	override_description?: string | null;
+	override_technologies?: string[] | null;
+	override_published?: boolean | null;
+})[]) {
 	const calls: { text: string; values?: unknown[] }[] = [];
 	return {
 		calls,
@@ -78,5 +83,40 @@ describe('project repository', () => {
 		const repository = createProjectRepository(database);
 
 		await expect(repository.findProjectByRepositoryId(999)).resolves.toBeNull();
+	});
+
+	it('saves overrides without changing imported project fields', async () => {
+		const { database, calls } = databaseReturning(row);
+		const repository = createProjectRepository(database);
+
+		await repository.saveProjectOverrides(1, {
+			title: 'My portfolio project',
+			description: 'A custom description',
+			stack: ['C', 'Win32'],
+			published: true,
+		});
+
+		expect(calls[0].text).toContain('INSERT INTO project_overrides');
+		expect(calls[0].values).toEqual([1, 'My portfolio project', 'A custom description', '["C","Win32"]', true]);
+	});
+
+	it('uses overrides when reading a project', async () => {
+		const { database } = databaseReturning({
+			...row,
+			override_title: 'My portfolio project',
+			override_description: 'A custom description',
+			override_technologies: ['C', 'Win32'],
+			override_published: true,
+		});
+		const repository = createProjectRepository(database);
+
+		await expect(repository.findProjectByRepositoryId(123)).resolves.toMatchObject({
+			project: {
+				title: 'My portfolio project',
+				description: 'A custom description',
+				stack: ['C', 'Win32'],
+			},
+			published: true,
+		});
 	});
 });
