@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createGitHubClient } from './client';
 
 const repository = {
+	id: 123,
 	name: 'portfolio',
 	description: 'A portfolio site',
 	html_url: 'https://github.com/example/portfolio',
@@ -22,6 +23,7 @@ describe('GitHub repository client', () => {
 
 		await expect(client.listRepositories('octocat')).resolves.toEqual([
 			{
+				id: 123,
 				name: 'portfolio',
 				description: 'A portfolio site',
 				htmlUrl: 'https://github.com/example/portfolio',

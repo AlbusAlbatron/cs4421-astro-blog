@@ -136,6 +136,7 @@ import { SITE_TITLE } from '../../consts';
 
 			<p class="status" id="import-status" aria-live="polite"></p>
 			<ul class="project-list" id="project-list" aria-label="GitHub repositories"></ul>
+			<button type="button" id="save-projects" hidden>Save selected projects</button>
 		</main>
 		<Footer />
 
@@ -153,6 +154,7 @@ import { SITE_TITLE } from '../../consts';
 			const status = document.querySelector<HTMLParagraphElement>('#import-status');
 			const projectList = document.querySelector<HTMLUListElement>('#project-list');
 			const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+			const saveButton = document.querySelector<HTMLButtonElement>('#save-projects');
 
 			function setStatus(message: string, state = '') {
 				if (!status) return;
@@ -163,6 +165,7 @@ import { SITE_TITLE } from '../../consts';
 			function renderProjects(projects: ImportedProject[]) {
 				if (!projectList) return;
 				projectList.replaceChildren();
+				if (saveButton) saveButton.hidden = true;
 
 				for (const project of projects) {
 					const item = document.createElement('li');
@@ -219,10 +222,45 @@ import { SITE_TITLE } from '../../consts';
 
 					renderProjects(payload.projects);
 					setStatus(`${payload.projects.length} repositories found.`);
+					if (saveButton) saveButton.hidden = false;
 				} catch (error) {
 					setStatus(error instanceof Error ? error.message : 'Unable to load repositories.', 'error');
 				} finally {
 					if (submitButton) submitButton.disabled = false;
+				}
+			});
+
+			saveButton?.addEventListener('click', async () => {
+				const selectedUrls = Array.from(
+					document.querySelectorAll<HTMLInputElement>('input[name="projects"]:checked'),
+				).map((input) => input.value);
+
+				if (selectedUrls.length === 0) {
+					setStatus('Select at least one project to save.', 'error');
+					return;
+				}
+
+				saveButton.disabled = true;
+				setStatus('Saving selected projects...');
+
+				try {
+					const username = usernameInput?.value.trim();
+					const response = await fetch(`/api/github/users/${encodeURIComponent(username ?? '')}/projects`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ repoUrls: selectedUrls }),
+					});
+					const payload = (await response.json()) as { projects?: unknown[]; error?: string };
+
+					if (!response.ok) {
+						throw new Error(payload.error ?? 'Unable to save projects.');
+					}
+
+					setStatus(`${payload.projects?.length ?? 0} projects saved.`);
+				} catch (error) {
+					setStatus(error instanceof Error ? error.message : 'Unable to save projects.', 'error');
+				} finally {
+					saveButton.disabled = false;
 				}
 			});
 		</script>
