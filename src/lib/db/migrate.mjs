@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
@@ -16,23 +16,32 @@ try {
 		)
 	`);
 
-	const migration = await readFile(path.join(migrationsDirectory, '001_create_project_schema.sql'), 'utf8');
-	const alreadyApplied = await pool.query('SELECT 1 FROM schema_migrations WHERE version = $1', ['001_create_project_schema']);
+	const migrationFiles = (await readdir(migrationsDirectory))
+		.filter((file) => /^\d+_.+\.sql$/.test(file))
+		.sort();
 
-	if (alreadyApplied.rowCount === 0) {
+	for (const file of migrationFiles) {
+		const version = file.replace(/\.sql$/, '');
+		const alreadyApplied = await pool.query('SELECT 1 FROM schema_migrations WHERE version = $1', [version]);
+
+		if (alreadyApplied.rowCount !== 0) {
+			continue;
+		}
+
+		const migration = await readFile(path.join(migrationsDirectory, file), 'utf8');
 		await pool.query('BEGIN');
 		try {
 			await pool.query(migration);
-			await pool.query('INSERT INTO schema_migrations (version) VALUES ($1)', ['001_create_project_schema']);
+			await pool.query('INSERT INTO schema_migrations (version) VALUES ($1)', [version]);
 			await pool.query('COMMIT');
-			console.log('Applied migration 001_create_project_schema.');
+			console.log(`Applied migration ${version}.`);
 		} catch (error) {
 			await pool.query('ROLLBACK');
 			throw error;
 		}
-	} else {
-		console.log('No pending migrations.');
 	}
+
+	console.log('No pending migrations.');
 } finally {
 	await pool.end();
 }

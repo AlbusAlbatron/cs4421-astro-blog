@@ -19,6 +19,13 @@ export type PersistedProject = ProjectRecord & {
 	updatedAt: Date;
 };
 
+export type ProjectOverrides = {
+	title?: string;
+	description?: string;
+	stack?: string[];
+	published?: boolean;
+};
+
 type ProjectRow = {
 	id: number;
 	github_repo_id: string | number;
@@ -32,6 +39,10 @@ type ProjectRow = {
 	published: boolean;
 	created_at: Date;
 	updated_at: Date;
+	override_title?: string | null;
+	override_description?: string | null;
+	override_technologies?: string[] | null;
+	override_published?: boolean | null;
 };
 
 const PROJECT_COLUMNS = `
@@ -45,14 +56,14 @@ function rowToProject(row: ProjectRow): PersistedProject {
 		githubOwner: row.github_owner,
 		repositoryName: row.repository_name,
 		project: {
-			title: row.title,
-			description: row.description,
+			title: row.override_title ?? row.title,
+			description: row.override_description ?? row.description,
 			repoUrl: row.repository_url,
-			stack: row.technologies,
+			stack: row.override_technologies ?? row.technologies,
 			date: new Date(row.last_github_update),
 		},
 		id: Number(row.id),
-		published: row.published,
+		published: row.override_published ?? row.published,
 		createdAt: new Date(row.created_at),
 		updatedAt: new Date(row.updated_at),
 	};
@@ -93,7 +104,13 @@ export function createProjectRepository(database: DatabaseClient) {
 
 		async findProjectsByOwner(owner: string): Promise<PersistedProject[]> {
 			const result = await database.query<ProjectRow>(
-				`SELECT ${PROJECT_COLUMNS} FROM projects WHERE github_owner = $1 ORDER BY last_github_update DESC`,
+				`SELECT ${PROJECT_COLUMNS}, overrides.title AS override_title,
+					overrides.description AS override_description,
+					overrides.technologies AS override_technologies,
+					overrides.published AS override_published
+				 FROM projects
+				 LEFT JOIN project_overrides AS overrides ON overrides.project_id = projects.id
+				 WHERE github_owner = $1 ORDER BY last_github_update DESC`,
 				[owner],
 			);
 
@@ -102,11 +119,37 @@ export function createProjectRepository(database: DatabaseClient) {
 
 		async findProjectByRepositoryId(repositoryId: number): Promise<PersistedProject | null> {
 			const result = await database.query<ProjectRow>(
-				`SELECT ${PROJECT_COLUMNS} FROM projects WHERE github_repo_id = $1`,
+				`SELECT ${PROJECT_COLUMNS}, overrides.title AS override_title,
+					overrides.description AS override_description,
+					overrides.technologies AS override_technologies,
+					overrides.published AS override_published
+				 FROM projects
+				 LEFT JOIN project_overrides AS overrides ON overrides.project_id = projects.id
+				 WHERE github_repo_id = $1`,
 				[repositoryId],
 			);
 
 			return result.rows[0] ? rowToProject(result.rows[0]) : null;
+		},
+
+		async saveProjectOverrides(projectId: number, overrides: ProjectOverrides): Promise<void> {
+			await database.query(
+				`INSERT INTO project_overrides (project_id, title, description, technologies, published)
+				 VALUES ($1, $2, $3, $4::jsonb, $5)
+				 ON CONFLICT (project_id) DO UPDATE SET
+					title = COALESCE(EXCLUDED.title, project_overrides.title),
+					description = COALESCE(EXCLUDED.description, project_overrides.description),
+					technologies = COALESCE(EXCLUDED.technologies, project_overrides.technologies),
+					published = COALESCE(EXCLUDED.published, project_overrides.published),
+					updated_at = NOW()`,
+				[
+					projectId,
+					overrides.title ?? null,
+					overrides.description ?? null,
+					overrides.stack === undefined ? null : JSON.stringify(overrides.stack),
+					overrides.published ?? null,
+				],
+			);
 		},
 	};
 }
