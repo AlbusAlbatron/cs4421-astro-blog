@@ -3,6 +3,7 @@ import { createGitHubClient } from './client';
 import { createRepositoryImportHandler } from '../../pages/api/github/users/[username]/projects';
 
 const githubRepository = {
+	id: 123,
 	name: 'portfolio',
 	description: 'A portfolio site',
 	html_url: 'https://github.com/example/portfolio',

@@ -1,6 +1,7 @@
 const GITHUB_API_URL = 'https://api.github.com';
 
 export type GitHubRepository = {
+	id: number;
 	name: string;
 	description: string | null;
 	htmlUrl: string;
@@ -35,6 +36,7 @@ type GitHubClientOptions = {
 };
 
 type GitHubRepositoryResponse = {
+	id: number;
 	name: string;
 	description: string | null;
 	html_url: string;
@@ -52,6 +54,7 @@ function isRepositoryResponse(value: unknown): value is GitHubRepositoryResponse
 	const repository = value as Record<string, unknown>;
 
 	return (
+		typeof repository.id === 'number' &&
 		typeof repository.name === 'string' &&
 		(repository.description === null || typeof repository.description === 'string') &&
 		typeof repository.html_url === 'string' &&
@@ -115,6 +118,7 @@ export function createGitHubClient(options: GitHubClientOptions = {}) {
 			}
 
 			return payload.map((repository) => ({
+				id: repository.id,
 				name: repository.name,
 				description: repository.description,
 				htmlUrl: repository.html_url,

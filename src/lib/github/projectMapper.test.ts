@@ -3,6 +3,7 @@ import type { GitHubRepository } from './client';
 import { mapRepositoriesToProjects, mapRepositoryToProject } from './projectMapper';
 
 const repository: GitHubRepository = {
+	id: 123,
 	name: 'portfolio',
 	description: ' A portfolio site ',
 	htmlUrl: 'https://github.com/example/portfolio',
