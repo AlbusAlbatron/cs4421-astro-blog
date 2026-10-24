@@ -1,4 +1,4 @@
-name: Deploy container
+aws sts get-caller-identity --query Account --output textaws sts get-caller-identity --query Account --output textname: Deploy container
 
 on:
   push:
