@@ -17,12 +17,20 @@ export class StaticSiteStack extends cdk.Stack {
 
         const cluster = new ecs.Cluster(this, 'SiteCluster', { vpc });
         const repository = ecr.Repository.fromRepositoryName(this, 'SiteRepository', 'astro-blog');
-        const imageTag = this.node.tryGetContext('imageTag') ?? 'latest';
+        const imageTag = this.node.tryGetContext('imageTag');
+
+        if (typeof imageTag !== 'string' || imageTag.length === 0) {
+            throw new Error('The imageTag CDK context value is required.');
+        }
+
         const image = ecs.ContainerImage.fromEcrRepository(repository, imageTag);
         const service = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'SiteService', {
             cluster,
             publicLoadBalancer: true,
             desiredCount: 1,
+            circuitBreaker: { rollback: true },
+            minHealthyPercent: 100,
+            maxHealthyPercent: 200,
             taskImageOptions: {
                 image,
                 containerPort: 4321,
