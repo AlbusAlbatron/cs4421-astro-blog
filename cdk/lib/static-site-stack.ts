@@ -2,10 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
-import * as ecrAssets from 'aws-cdk-lib/aws-ecr-assets';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as path from 'node:path';
 
 export class StaticSiteStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -17,9 +16,9 @@ export class StaticSiteStack extends cdk.Stack {
         });
 
         const cluster = new ecs.Cluster(this, 'SiteCluster', { vpc });
-        const image = ecs.ContainerImage.fromDockerImageAsset(new ecrAssets.DockerImageAsset(this, 'SiteImage', {
-            directory: path.join(__dirname, '../..'),
-        }));
+        const repository = ecr.Repository.fromRepositoryName(this, 'SiteRepository', 'astro-blog');
+        const imageTag = this.node.tryGetContext('imageTag') ?? 'latest';
+        const image = ecs.ContainerImage.fromEcrRepository(repository, imageTag);
         const service = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'SiteService', {
             cluster,
             publicLoadBalancer: true,
